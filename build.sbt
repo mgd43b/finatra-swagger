@@ -35,7 +35,7 @@ libraryDependencies ++= Seq(
   "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
   "org.webjars" % "swagger-ui" % swaggerUIVersion.value,
   "net.bytebuddy" % "byte-buddy" % "1.10.19",
-  "org.scalatest" %% "scalatest" % "3.1.3" % Test
+  "org.scalatest" %% "scalatest" % "3.1.4" % Test
 )
 
 val examplesTestLibs = Seq(
