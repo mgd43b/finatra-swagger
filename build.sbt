@@ -1,4 +1,7 @@
+
 inThisBuild(List(
+  scalaVersion := "2.13.1",
+  crossScalaVersions := Seq("2.11.12", "2.12.12", "2.13.1"),
   organization := "com.jakehschwartz",
   homepage := Some(url("https://github.com/jakehschwartz/finatra-swagger")),
   licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
@@ -8,63 +11,49 @@ inThisBuild(List(
   )
 ))
 
-name := "finatra-swagger"
-
-scalaVersion := "2.13.1"
-
-crossScalaVersions := Seq("2.11.12", "2.12.12", "2.13.1")
-
-Global / onChangedBuildSource := ReloadOnSourceChanges
-
-lazy val twitterReleaseVersion = "21.2.0"
-lazy val jacksonVersion = "2.11.2"
-
 lazy val swaggerUIVersion = SettingKey[String]("swaggerUIVersion")
+lazy val finatraSwagger = project
+  .in(file("."))
+  .settings(settings: _*)
+  .settings(Seq(
+    name := "finatra-swagger",
+    swaggerUIVersion := "3.43.0",
+    buildInfoPackage := "com.jakehschwartz.finatra.swagger",
+    buildInfoKeys := Seq[BuildInfoKey](name, version, swaggerUIVersion),
+    libraryDependencies ++= Seq(
+      "com.twitter" %% "finatra-http" % twitterReleaseVersion,
+      "io.swagger.core.v3" % "swagger-project" % "2.1.7",
+      "com.github.swagger-akka-http" %% "swagger-scala-module" % "2.3.0",
+      "com.fasterxml.jackson.datatype" % "jackson-datatype-joda" % jacksonVersion,
+      "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
+      "org.webjars" % "swagger-ui" % swaggerUIVersion.value,
+      "net.bytebuddy" % "byte-buddy" % "1.10.19"
+    ) ++ testLibs
+  ))
+  .settings(settings: _*)
+  .enablePlugins(BuildInfoPlugin)
 
-swaggerUIVersion := "3.35.2"
+lazy val examples = Project("hello-world-example", file("examples/hello-world"))
+  .settings(Seq(
+    name := "examples",
+    libraryDependencies ++= testLibs,
+  ))
+  .settings(settings: _*)
+  .settings(skip in publish := true)
+  .dependsOn(finatraSwagger)
 
-enablePlugins(BuildInfoPlugin)
-buildInfoPackage := "com.jakehschwartz.finatra.swagger"
-buildInfoKeys := Seq[BuildInfoKey](name, version, swaggerUIVersion)
-
-libraryDependencies ++= Seq(
-  "com.fasterxml.jackson.datatype" % "jackson-datatype-joda" % jacksonVersion,
-  "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
-  "com.twitter" %% "finatra-http" % twitterReleaseVersion,
-  "io.swagger" % "swagger-core" % "1.6.2",
-  "io.swagger" %% "swagger-scala-module" % "1.0.6",
-  "net.bytebuddy" % "byte-buddy" % "1.10.19",
-  "org.scalatest" %% "scalatest" % "3.1.3" % Test,
-  "org.webjars" % "swagger-ui" % swaggerUIVersion.value
-
-)
-
-val testLibs = Seq(
-  "ch.qos.logback" % "logback-classic" % "1.2.3",
-  "com.twitter" %% "finatra-http" % twitterReleaseVersion % "test" classifier "tests",
-  "com.twitter" %% "inject-app" % twitterReleaseVersion % "test" classifier "tests",
-  "com.twitter" %% "inject-core" % twitterReleaseVersion % "test" classifier "tests",
-  "com.twitter" %% "inject-modules" % twitterReleaseVersion % "test" classifier "tests",
-  "com.twitter" %% "inject-server" % twitterReleaseVersion % "test" classifier "tests",
-  "org.mockito" % "mockito-all" % "1.10.19"  % Test,
-  "org.scalatest" %% "scalatest" % "3.1.4"  % Test,
-  "org.scalatestplus" %% "mockito-1-10" % "3.1.0.0" % "test"
-
-)
-
-val exampleLibs = Seq(
-  "com.jakehschwartz" %% "finatra-swagger" % twitterReleaseVersion,
-
-)
-
-scalacOptions ++= Seq(
-  "-deprecation",
-  "-feature",
-  "-language:existentials",
-  "-language:implicitConversions"
-)
-
-val sharedSettings =   Seq(
+lazy val settings: Seq[sbt.Def.SettingsDefinition] = Seq(
+  scalacOptions ++= Seq(
+    "-deprecation",
+    "-feature",
+    "-language:existentials",
+    "-language:implicitConversions"
+  ),
+  resolvers ++= Seq(
+    "Local Ivy" at "file:///"+Path.userHome+"/.ivy2/local",
+    "Local Ivy Cache" at "file:///"+Path.userHome+"/.ivy2/cache",
+    "Local Maven Repository" at "file:///"+Path.userHome+"/.m2/repository"
+  ),
   parallelExecution in Test := true,
   testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oDF"),
   javaOptions ++= Seq(
@@ -75,25 +64,24 @@ val sharedSettings =   Seq(
   javaOptions in Test ++= Seq(
     "-Dlog.service.output=/dev/stdout",
     "-Dlog.access.output=/dev/stdout",
-    "-Dlog_level=DEBUG")
+    "-Dlog_level=DEBUG"
+  )
 )
 
-//pomIncludeRepository := { _ => false }
-//
-//pgpPassphrase := sys.env.get("PGP_PASSPHRASE").map(_.toCharArray())
-//
-//scmInfo := Some(
-//  ScmInfo(
-//    browseUrl = url("https://github.com/jakehschwartz/finatra-swagger"),
-//    connection = "https://github.com/jakehschwartz/finatra-swagger.git"
-//  )
-//)
 
-lazy val root = Project("finatra-swagger", file("."))
-  .settings(libraryDependencies ++= testLibs)
-  .settings(sharedSettings)
+lazy val twitterReleaseVersion = "21.2.0"
+lazy val jacksonVersion = "2.11.2"
+val testLibs = Seq(
+  "com.twitter" %% "finatra-http" % twitterReleaseVersion % "test" classifier "tests",
+  "com.twitter" %% "inject-app" % twitterReleaseVersion % "test" classifier "tests",
+  "com.twitter" %% "inject-core" % twitterReleaseVersion % "test" classifier "tests",
+  "com.twitter" %% "inject-modules" % twitterReleaseVersion % "test" classifier "tests",
+  "com.twitter" %% "inject-server" % twitterReleaseVersion % "test" classifier "tests",
+  "ch.qos.logback" % "logback-classic" % "1.2.3",
+  "org.scalatest" %% "scalatest" % "3.2.5" % "test",
+  "org.mockito" %% "mockito-scala" % "1.16.25" % "test"
+)
 
-lazy val example = Project("hello-world-example", file("examples/hello-world"))
-  .settings(libraryDependencies ++= testLibs ++ exampleLibs)
-  .settings(sharedSettings)
-
+val exampleLibs = Seq(
+  "com.jakehschwartz" %% "finatra-swagger" % twitterReleaseVersion,
+)

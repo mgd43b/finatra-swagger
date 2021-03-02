@@ -6,7 +6,7 @@ import java.util.Date
 import com.twitter.finagle.http.{Message, Request}
 import com.twitter.finatra.http.Controller
 import com.twitter.inject.annotations.Flag
-import io.swagger.models.Swagger
+import io.swagger.v3.oas.models.OpenAPI
 import javax.activation.MimetypesFileTypeMap
 import javax.inject.{Inject, Singleton}
 import org.apache.commons.io.FilenameUtils
@@ -15,7 +15,7 @@ import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
 import scala.util.{Failure, Success, Try}
 
 @Singleton
-class DocsController @Inject()(swagger: Swagger,
+class DocsController @Inject()(swagger: OpenAPI,
                                @Flag("swagger.docs.endpoint") endpoint: String)
     extends Controller {
 

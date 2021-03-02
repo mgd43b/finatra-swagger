@@ -3,7 +3,7 @@ package com.jakehschwartz.finatra.swagger
 import com.google.inject.Stage
 import com.twitter.finatra.http.EmbeddedHttpServer
 import com.twitter.inject.server.FeatureTest
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 
 trait SampleAppBaseTest extends FeatureTest with Matchers {
 

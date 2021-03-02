@@ -3,11 +3,13 @@ package com.jakehschwartz.finatra.swagger
 import com.twitter.finagle.http.Request
 import com.twitter.finatra.http.annotations.RouteParam
 import com.twitter.finatra.validation.constraints.{Max, Min}
-import io.swagger.annotations.{ApiModel, ApiModelProperty}
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.media.Schema.AccessMode
+
 import javax.inject.Inject
 import org.joda.time.{DateTime, LocalDate}
 
-@ApiModel(value="AddressModel", description="Sample address model for documentation")
+@Schema(name="AddressModel", description="Sample address model for documentation")
 case class Address(street: String, zip: String)
 
 case class Student(firstName: String, lastName: String, gender: Gender, birthday: LocalDate, grade: Int, address: Option[Address])
@@ -15,8 +17,8 @@ case class Student(firstName: String, lastName: String, gender: Gender, birthday
 case class StudentWithRoute(
   @RouteParam id: String,
   @Inject request: Request,
-  @ApiModelProperty(name = "first_name")firstName: String,
-  @ApiModelProperty(name = "last_name")lastName: String,
+  @Schema(name = "first_name")firstName: String,
+  @Schema(name = "last_name")lastName: String,
   gender: Gender,
   birthday: LocalDate,
   @Min(1) @Max(12) grade: Int,
@@ -35,11 +37,11 @@ object CourseType extends Enumeration {
 
 case class Course(time: DateTime,
                   name: String,
-                  @ApiModelProperty(required = false, example = "[math,stem]")
+                  @Schema(required = false, example = "[math,stem]")
                   tags: Seq[String],
-                  @ApiModelProperty(dataType = "string", allowableValues = "LEC,LAB")
+                  @Schema(implementation = classOf[String], allowableValues = Array("LEC","LAB"))
                   typ: CourseType.Value,
-                  @ApiModelProperty(readOnly = true)
+                  @Schema(accessMode = AccessMode.READ_ONLY)
                   capacity: Int,
-                  @ApiModelProperty(dataType = "double", required = true)
+                  @Schema(implementation = classOf[Double], required = true)
                   cost: BigDecimal)

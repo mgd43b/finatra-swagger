@@ -1,10 +1,9 @@
 package com.jakehschwartz.finatra.swagger
 
-import com.jakehschwartz.finatra.swagger.FinatraSwagger._
-import com.jakehschwartz.finatra.swagger.SchemaUtil._
-import io.swagger.models._
-import io.swagger.models.parameters._
-import io.swagger.util.Json
+import io.swagger.v3.oas.models._
+import io.swagger.v3.oas.models.media.{Content, MediaType}
+import io.swagger.v3.oas.models.parameters._
+import io.swagger.v3.oas.models.responses.ApiResponse
 
 import scala.jdk.CollectionConverters._
 import scala.reflect.runtime.universe._
@@ -15,122 +14,100 @@ object FinatraOperation {
 
 class FinatraOperation(operation: Operation) {
 
-  def routeParam[T: TypeTag](name: String, description: String = "", required: Boolean = true)
-                            (implicit swagger: Swagger): Operation = {
+  def pathParam[T: TypeTag](name: String, description: String = "", required: Boolean = true)
+                           (implicit swagger: FinatraSwagger): Operation = {
     val param = new PathParameter()
       .name(name)
       .description(description)
       .required(required)
-      .property(swagger.registerModel[T])
+      .schema(swagger.registerModel[T].schema)
 
-    operation.parameter(param)
-
-    operation
+    operation.addParametersItem(param)
   }
 
-  def request[T <: Product : TypeTag](implicit swagger: Swagger): Operation = {
-    swagger.register[T].foreach(operation.parameter)
+  def request[T <: Product : TypeTag](implicit swagger: FinatraSwagger): Operation = {
+    operation.setParameters(swagger.register[T].asJava)
 
     operation
   }
 
   def queryParam[T: TypeTag](name: String, description: String = "", required: Boolean = true)
-                            (implicit swagger: Swagger): Operation = {
+                            (implicit swagger: FinatraSwagger): Operation = {
     val param = new QueryParameter()
       .name(name)
       .description(description)
       .required(required)
-      .property(swagger.registerModel[T])
+      .schema(swagger.registerModel[T].schema)
 
-    operation.parameter(param)
-
-    operation
+    operation.addParametersItem(param)
   }
 
   def headerParam[T: TypeTag](name: String, description: String = "", required: Boolean = true)
-                             (implicit swagger: Swagger): Operation = {
+                             (implicit swagger: FinatraSwagger): Operation = {
     val param = new HeaderParameter()
       .name(name)
       .description(description)
       .required(required)
-      .property(swagger.registerModel[T])
+      .schema(swagger.registerModel[T].schema)
 
-    operation.parameter(param)
-
-    operation
-  }
-
-  def formParam[T: TypeTag](name: String, description: String = "", required: Boolean = true)
-                           (implicit swagger: Swagger): Operation = {
-    val param = new FormParameter()
-      .name(name)
-      .description(description)
-      .required(required)
-      .property(swagger.registerModel[T])
-
-    operation.parameter(param)
-
-    operation
+    operation.addParametersItem(param)
   }
 
   def cookieParam[T: TypeTag](name: String, description: String = "", required: Boolean = true)
-                             (implicit swagger: Swagger): Operation = {
+                             (implicit swagger: FinatraSwagger): Operation = {
     val param = new CookieParameter()
       .name(name)
       .description(description)
       .required(required)
-      .property(swagger.registerModel[T])
+      .schema(swagger.registerModel[T].schema)
 
-    operation.parameter(param)
-
+    operation.addParametersItem(param)
     operation
   }
 
-  def bodyParam[T: TypeTag](name: String, description: String = "", example: Option[T] = None)
-                           (implicit swagger: Swagger): Operation = {
-    val model = swagger.registerModel[T].toModel
+  def bodyParam[T: TypeTag](description: String = "", example: Option[T] = None)
+                           (implicit swagger: FinatraSwagger): Operation = {
+    val model = swagger.registerModel[T].schema
 
-    //todo not working
-    example.foreach { e =>
-      if(model != null) {
-        model.setExample(Json.mapper.writeValueAsString(e))
-      }
-    }
-
-    val param = new BodyParameter()
-      .name(name)
-      .description(description)
+    val content = new Content
+    val mediaType = new MediaType()
       .schema(model)
+    content.addMediaType("application/json", example.fold(mediaType)(mediaType.example))
 
-    operation.parameter(param)
-
-    operation
-  }
-
-  def responseWith[T: TypeTag](status: Int, description: String = "", example: Option[T] = None)
-                          (implicit finatraSwagger: Swagger): Operation = {
-    val ref = finatraSwagger.registerModel[T]
-
-    //todo not working, sample is not in the generated api, waiting for swagger fix
-    example.foreach { e =>
-      if(ref != null) {
-        ref.setExample(e)
-        //val model = api.swagger.getDefinitions.get(ref.asInstanceOf[RefProperty].getSimpleRef)
-        //model.setExample(example)
-      }
-    }
-
-    val param = new Response()
+    val reqBody = new RequestBody()
+      .content(content)
       .description(description)
-      .schema(ref)
-
-    operation.response(status, param)
+      .$ref(model.get$ref())
+    operation.requestBody(reqBody)
 
     operation
   }
 
-  def addSecurity(name: String, scopes: List[String]): Operation = {
-    operation.addSecurity(name, scopes.asJava)
+  def respondsWith[T: TypeTag](status: Int,
+                               description: String = "",
+                               contentType: String = "",
+                               example: Option[T] = None)
+                              (implicit finatraSwagger: FinatraSwagger): Operation = {
+    val ref = finatraSwagger.registerModel[T].schema
+
+//    //todo not working, sample is not in the generated api, waiting for swagger fix
+//    example.foreach { e =>
+//      if(ref != null) {
+//        ref.setExample(e)
+//        //val model = api.swagger.getDefinitions.get(ref.asInstanceOf[RefProperty].getSimpleRef)
+//        //model.setExample(example)
+//      }
+//    }
+
+    val content = new Content
+    val mediaType = new MediaType().schema(ref)
+    content.addMediaType(contentType, example.fold(mediaType)(mediaType.example))
+
+    val apiResponse = new ApiResponse()
+      .description(description)
+      .content(content)
+
+    operation.getResponses.addApiResponse(status.toString, apiResponse)
 
     operation
   }

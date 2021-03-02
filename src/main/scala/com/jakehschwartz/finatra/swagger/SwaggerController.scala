@@ -6,6 +6,5 @@ trait SwaggerController extends Controller with SwaggerRouteDSL {
   self: Controller =>
 
   implicit protected val convertToFinatraOperation = FinatraOperation.convert _
-  implicit protected val convertToFinatraSwagger = FinatraSwagger.convert _
   implicit protected val convertToSwaggerRouteDSL = SwaggerRouteDSL.convert _
 }

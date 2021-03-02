@@ -2,16 +2,16 @@ package com.jakehschwartz.finatra.swagger
 
 import com.fasterxml.jackson.databind.{JavaType, ObjectMapper}
 import com.google.inject.{Inject => GInject}
-import com.jakehschwartz.finatra.swagger.SchemaUtil._
 import com.twitter.finagle.http.Request
-import com.twitter.finatra.http.annotations.{FormParam, QueryParam, RouteParam, Header => HeaderParam}
+import com.twitter.finatra.http.annotations.{QueryParam, RouteParam, Header => HeaderParam}
 import com.twitter.finatra.validation.constraints
-import io.swagger.converter.{ModelConverter, ModelConverterContext, ModelConverters}
-import io.swagger.jackson.ModelResolver
-import io.swagger.models._
-import io.swagger.models.parameters._
-import io.swagger.models.properties.Property
-import io.swagger.util.Json
+import io.swagger.v3.core.converter.{AnnotatedType, ModelConverter, ModelConverterContext, ModelConverters, ResolvedSchema}
+import io.swagger.v3.core.jackson.ModelResolver
+import io.swagger.v3.core.util.Json
+import io.swagger.v3.oas.models.PathItem.HttpMethod
+import io.swagger.v3.oas.models._
+import io.swagger.v3.oas.models.media.Schema
+import io.swagger.v3.oas.models.parameters._
 import net.bytebuddy.ByteBuddy
 import net.bytebuddy.description.`type`.TypeDescription
 import net.bytebuddy.description.modifier.Visibility
@@ -34,7 +34,6 @@ object FinatraSwagger {
       classOf[JInject],
       classOf[GInject],
       classOf[HeaderParam],
-      classOf[FormParam],
       classOf[constraints.AssertFalse],
       classOf[constraints.AssertTrue],
       classOf[constraints.CountryCode],
@@ -50,8 +49,6 @@ object FinatraSwagger {
       classOf[constraints.TimeGranularity],
       classOf[constraints.UUID]
     )
-
-  implicit def convert(swagger: Swagger): FinatraSwagger = new FinatraSwagger(swagger)
 }
 
 sealed trait ModelParam {
@@ -64,26 +61,29 @@ sealed trait ModelParam {
 sealed trait FinatraRequestParam
 case class RouteRequestParam(name: String, typ: Class[_], description: String = "", required: Boolean = true) extends FinatraRequestParam with ModelParam
 case class QueryRequestParam(name: String, typ: Class[_], description: String = "", required: Boolean = true) extends FinatraRequestParam with ModelParam
+case class HeaderRequestParam(name: String, required: Boolean = true, description: String = "", typ: Class[_]) extends FinatraRequestParam with ModelParam
 case class BodyRequestParam(description: String = "", name: String, typ: Class[_], innerOptionType: Option[java.lang.reflect.Type] = None) extends FinatraRequestParam
 case class RequestInjectRequestParam(name: String) extends FinatraRequestParam
-case class HeaderRequestParam(name: String, required: Boolean = true, description: String = "", typ: Class[_]) extends FinatraRequestParam with ModelParam
-case class FormRequestParam(name: String, description: String = "", required: Boolean = true, typ: Class[_]) extends FinatraRequestParam with ModelParam
 
 object Resolvers {
   class ScalaOptionResolver(objectMapper: ObjectMapper) extends ModelResolver(objectMapper) {
-    override def resolveProperty(
-      propType: JavaType,
-      context: ModelConverterContext,
-      annotations: Array[Annotation],
-      next: util.Iterator[ModelConverter]): Property = {
-      if (propType.getRawClass == classOf[Option[_]]) {
+    override def resolve(
+                          annotatedType: AnnotatedType,
+                          context: ModelConverterContext,
+                          next: util.Iterator[ModelConverter]): Schema[_]= {
+      if (annotatedType.getType == classOf[Option[_]]) {
         try {
-          super.resolveProperty(propType.containedType(0), context, annotations, next)
+          val at = new AnnotatedType()
+            .`type`(annotatedType.getType.asInstanceOf[JavaType].containedType(0))
+            .ctxAnnotations(annotatedType.getCtxAnnotations)
+          super.resolve(at, context, next)
         } catch {
           case _: Exception =>
-            super.resolveProperty(propType, context, annotations, next)
+            super.resolve(annotatedType, context, next)
         }
-      } else super.resolveProperty(propType, context, annotations, next)
+      } else {
+        super.resolve(annotatedType, context, next)
+      }
     }
   }
 
@@ -92,7 +92,7 @@ object Resolvers {
   }
 }
 
-class FinatraSwagger(swagger: Swagger) {
+class FinatraSwagger(implicit val swagger: OpenAPI) {
 
   /**
    * Register a request object that contains body information/route information/etc
@@ -112,25 +112,19 @@ class FinatraSwagger(swagger: Swagger) {
             name(param.name).
             description(param.description).
             required(param.required).
-            property(registerModel(param.typ))
+            schema(registerModel(param.typ).schema)
         case param @ (_: QueryRequestParam) =>
           new QueryParameter().
             name(param.name).
             description(param.description).
             required(param.required).
-            property(registerModel(param.typ))
+            schema(registerModel(param.typ).schema)
         case param @ (_: HeaderRequestParam) =>
           new HeaderParameter().
             name(param.name).
             description(param.description).
             required(param.required).
-            property(registerModel(param.typ))
-        case param @ (_: FormRequestParam) =>
-          new FormParameter().
-            name(param.name).
-            description(param.description).
-            required(param.required).
-            property(registerModel(param.typ))
+            schema(registerModel(param.typ).schema)
       }
 
     swaggerFinatraProps ++ List(getSwaggerBodyProp[T])
@@ -172,9 +166,9 @@ class FinatraSwagger(swagger: Swagger) {
         .annotateField(annotations.toList.asJava)
     }
 
-    val bodyProperty = registerModel(populatedType.make.load(getClass.getClassLoader).getLoaded).toModel
+    val bodyProperty = registerModel(populatedType.make.load(getClass.getClassLoader).getLoaded).schema
 
-    new BodyParameter()
+    new Parameter()
       .name("body")
       .schema(bodyProperty)
   }
@@ -212,7 +206,6 @@ class FinatraSwagger(swagger: Swagger) {
         val injectJavax = annotationExtractor(classOf[JInject])
         val injectGuice = annotationExtractor(classOf[GInject])
         val header = annotationExtractor(classOf[HeaderParam])
-        val form = annotationExtractor(classOf[FormParam])
 
         val (isRequired, innerOptionType) = field.getGenericType match {
           case parameterizedType: ParameterizedType =>
@@ -236,9 +229,6 @@ class FinatraSwagger(swagger: Swagger) {
         else if (header.isDefined) {
           Some(HeaderRequestParam(field.getName, typ = field.getType, required = isRequired))
         }
-        else if (form.isDefined) {
-          Some(FormRequestParam(field.getName, typ = field.getType, required = isRequired))
-        }
         else {
           Some(BodyRequestParam(name = field.getName, typ = field.getType, innerOptionType = innerOptionType))
         }
@@ -247,7 +237,7 @@ class FinatraSwagger(swagger: Swagger) {
     ast.flatten
   }
 
-  def registerModel[T: TypeTag]: Property = {
+  def registerModel[T: TypeTag]: ResolvedSchema = {
     val paramType: Type = typeOf[T]
     if (paramType =:= TypeTag.Nothing.tpe) {
       null
@@ -258,13 +248,13 @@ class FinatraSwagger(swagger: Swagger) {
     }
   }
 
-  private def registerModel(typeClass: Class[_], name: Option[String] = None) = {
+  private def registerModel(typeClass: Class[_]) = {
     val modelConverters = ModelConverters.getInstance()
     val models = modelConverters.readAll(typeClass)
     for (entry <- models.entrySet().asScala) {
-      swagger.addDefinition(entry.getKey, entry.getValue)
+      swagger.addExtension(entry.getKey, entry.getValue)
     }
-    val schema = modelConverters.readAsProperty(typeClass)
+    val schema = modelConverters.readAllAsResolvedSchema(typeClass)
 
     schema
   }
@@ -273,17 +263,14 @@ class FinatraSwagger(swagger: Swagger) {
     FinatraSwagger.finatraRouteParameter.replaceAllIn(path, "{$1}")
   }
 
-  def registerOperation(path: String, method: String, operation: Operation): Swagger = {
+  def registerOperation(path: String, method: HttpMethod, operation: Operation): OpenAPI = {
     val swaggerPath = convertPath(path)
 
-    var spath = swagger.getPath(swaggerPath)
+    var spath = swagger.getPaths.get(swaggerPath)
     if (spath == null) {
-      spath = new Path()
-      swagger.path(swaggerPath, spath)
+      spath = new PathItem()
     }
-
-    spath.set(method, operation)
-
-    swagger
+    spath.operation(method, operation)
+    swagger.path(swaggerPath, spath)
   }
 }

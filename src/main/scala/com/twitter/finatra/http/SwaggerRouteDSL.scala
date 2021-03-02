@@ -2,17 +2,18 @@ package com.twitter.finatra.http
 
 import com.jakehschwartz.finatra.swagger.FinatraSwagger
 import com.twitter.finagle.http.{Request, Response, RouteIndex, Status}
-import io.swagger.models.{Operation, Swagger}
+import io.swagger.v3.oas.models.PathItem.HttpMethod
+import io.swagger.v3.oas.models.{OpenAPI, Operation}
 
 /**
   * To work around the accessibility of RouteDSL, this class is in "com.twitter.finatra.http" package
   */
 object SwaggerRouteDSL {
-  implicit def convert(dsl: RouteDSL)(implicit swagger: Swagger): SwaggerRouteDSL = new SwaggerRouteDSLWrapper(dsl)(swagger)
+  implicit def convert(dsl: RouteDSL)(implicit swagger: FinatraSwagger): SwaggerRouteDSL = new SwaggerRouteDSLWrapper(dsl)(swagger)
 }
 
 trait SwaggerRouteDSL extends RouteDSL {
-  implicit protected val swagger: Swagger
+  implicit protected val swagger: FinatraSwagger
 
   val noopCallback: Request => Response = _ => response.SimpleResponse(Status.Ok, "")
 
@@ -23,7 +24,7 @@ trait SwaggerRouteDSL extends RouteDSL {
                                                                  registerOptionsRequest: Boolean = false)
                                                                 (doc: Operation => Operation)
                                                                 (callback: RequestType => ResponseType): Unit = {
-    registerOperation(route, "post")(doc)
+    registerOperation(route, HttpMethod.POST)(doc)
     post(route, name, admin, routeIndex)(callback)
     if (registerOptionsRequest) {
       options(route, name, admin, routeIndex)(noopCallback)
@@ -37,7 +38,7 @@ trait SwaggerRouteDSL extends RouteDSL {
                                                                 registerOptionsRequest: Boolean = false)
                                                                (doc: Operation => Operation)
                                                                (callback: RequestType => ResponseType): Unit = {
-    registerOperation(route, "get")(doc)
+    registerOperation(route, HttpMethod.GET)(doc)
     get(route, name, admin, routeIndex)(callback)
     if (registerOptionsRequest) {
       options(route, name, admin, routeIndex)(noopCallback)
@@ -51,7 +52,7 @@ trait SwaggerRouteDSL extends RouteDSL {
                                                                 registerOptionsRequest: Boolean = false)
                                                                (doc: Operation => Operation)
                                                                (callback: RequestType => ResponseType): Unit = {
-    registerOperation(route, "put")(doc)
+    registerOperation(route, HttpMethod.PUT)(doc)
     put(route, name, admin, routeIndex)(callback)
     if (registerOptionsRequest) {
       options(route, name, admin, routeIndex)(noopCallback)
@@ -65,7 +66,7 @@ trait SwaggerRouteDSL extends RouteDSL {
                                                                   registerOptionsRequest: Boolean = false)
                                                                  (doc: Operation => Operation)
                                                                  (callback: RequestType => ResponseType): Unit = {
-    registerOperation(route, "patch")(doc)
+    registerOperation(route, HttpMethod.PATCH)(doc)
     patch(route, name, admin, routeIndex)(callback)
     if (registerOptionsRequest) {
       options(route, name, admin, routeIndex)(noopCallback)
@@ -79,7 +80,7 @@ trait SwaggerRouteDSL extends RouteDSL {
                                                                  registerOptionsRequest: Boolean = false)
                                                                 (doc: Operation => Operation)
                                                                 (callback: RequestType => ResponseType): Unit = {
-    registerOperation(route, "head")(doc)
+    registerOperation(route, HttpMethod.HEAD)(doc)
     head(route, name, admin, routeIndex)(callback)
     if (registerOptionsRequest) {
       options(route, name, admin, routeIndex)(noopCallback)
@@ -93,7 +94,7 @@ trait SwaggerRouteDSL extends RouteDSL {
                                                                    registerOptionsRequest: Boolean = false)
                                                                   (doc: Operation => Operation)
                                                                   (callback: RequestType => ResponseType): Unit = {
-    registerOperation(route, "delete")(doc)
+    registerOperation(route, HttpMethod.DELETE)(doc)
     delete(route, name, admin, routeIndex)(callback)
     if (registerOptionsRequest) {
       options(route, name, admin, routeIndex)(noopCallback)
@@ -106,14 +107,12 @@ trait SwaggerRouteDSL extends RouteDSL {
                                                                     routeIndex: Option[RouteIndex] = None)
                                                                    (doc: Operation => Operation)
                                                                    (callback: RequestType => ResponseType): Unit = {
-    registerOperation(route, "options")(doc)
+    registerOperation(route, HttpMethod.OPTIONS)(doc)
     options(route, name, admin, routeIndex)(callback)
   }
 
-  private def registerOperation(path: String, method: String)(doc: Operation => Operation): Unit = {
-    FinatraSwagger
-      .convert(swagger)
-      .registerOperation(prefixRoute(path), method, doc(new Operation))
+  private def registerOperation(path: String, method: HttpMethod)(doc: Operation => Operation): Unit = {
+    swagger.registerOperation(prefixRoute(path), method, doc(new Operation))
   }
 
 
@@ -129,7 +128,7 @@ trait SwaggerRouteDSL extends RouteDSL {
   }
 }
 
-private class SwaggerRouteDSLWrapper(protected val dsl: RouteDSL)(implicit protected val swagger: Swagger) extends SwaggerRouteDSL {
+private class SwaggerRouteDSLWrapper(protected val dsl: RouteDSL)(implicit protected val swagger: FinatraSwagger) extends SwaggerRouteDSL {
   override private[http] val routeBuilders                 = dsl.routeBuilders
   override private[http] val annotations                   = dsl.annotations
   override private[http] lazy val contextVar               = dsl.contextVar
