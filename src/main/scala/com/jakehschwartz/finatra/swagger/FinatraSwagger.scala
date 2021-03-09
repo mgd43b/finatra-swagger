@@ -112,19 +112,19 @@ class FinatraSwagger(implicit val openAPI: OpenAPI) {
             name(param.name).
             description(param.description).
             required(param.required).
-            schema(registerModel(param.typ).schema)
+            schema(registerModel(param.typ))
         case param @ (_: QueryRequestParam) =>
           new QueryParameter().
             name(param.name).
             description(param.description).
             required(param.required).
-            schema(registerModel(param.typ).schema)
+            schema(registerModel(param.typ))
         case param @ (_: HeaderRequestParam) =>
           new HeaderParameter().
             name(param.name).
             description(param.description).
             required(param.required).
-            schema(registerModel(param.typ).schema)
+            schema(registerModel(param.typ))
       }
 
     swaggerFinatraProps ++ List(getSwaggerBodyProp[T])
@@ -166,7 +166,7 @@ class FinatraSwagger(implicit val openAPI: OpenAPI) {
         .annotateField(annotations.toList.asJava)
     }
 
-    val bodyProperty = registerModel(populatedType.make.load(getClass.getClassLoader).getLoaded).schema
+    val bodyProperty = registerModel(populatedType.make.load(getClass.getClassLoader).getLoaded)
 
     new Parameter()
       .name("body")
@@ -237,7 +237,7 @@ class FinatraSwagger(implicit val openAPI: OpenAPI) {
     ast.flatten
   }
 
-  def registerModel[T: TypeTag]: ResolvedSchema = {
+  def registerModel[T: TypeTag]: Schema[_] = {
     val paramType: Type = typeOf[T]
     if (paramType =:= TypeTag.Nothing.tpe) {
       null
@@ -248,15 +248,15 @@ class FinatraSwagger(implicit val openAPI: OpenAPI) {
     }
   }
 
-  private def registerModel(typeClass: Class[_]) = {
+  private def registerModel(typeClass: Class[_]): Schema[_] = {
     val modelConverters = ModelConverters.getInstance()
     val models = modelConverters.readAll(typeClass)
     for (entry <- models.entrySet().asScala) {
       openAPI.addExtension(entry.getKey, entry.getValue)
     }
-    val schema = modelConverters.readAllAsResolvedSchema(typeClass)
+    val schema = modelConverters.readAll(typeClass)
 
-    schema
+    schema.get(typeClass.getSimpleName)
   }
 
   def convertPath(path: String): String = {
@@ -266,11 +266,17 @@ class FinatraSwagger(implicit val openAPI: OpenAPI) {
   def registerOperation(path: String, method: HttpMethod, operation: Operation): OpenAPI = {
     val swaggerPath = convertPath(path)
 
-    var spath = openAPI.getPaths.get(swaggerPath)
-    if (spath == null) {
-      spath = new PathItem()
+    if (openAPI.getPaths == null) {
+      val spath = new PathItem()
+      spath.operation(method, operation)
+      openAPI.path(swaggerPath, spath)
+    } else {
+      var spath = openAPI.getPaths.get(swaggerPath)
+      if (spath == null) {
+        spath = new PathItem()
+      }
+      spath.operation(method, operation)
+      openAPI.path(swaggerPath, spath)
     }
-    spath.operation(method, operation)
-    openAPI.path(swaggerPath, spath)
   }
 }

@@ -3,7 +3,7 @@ package com.jakehschwartz.finatra.swagger
 import io.swagger.v3.oas.models._
 import io.swagger.v3.oas.models.media.{Content, MediaType}
 import io.swagger.v3.oas.models.parameters._
-import io.swagger.v3.oas.models.responses.ApiResponse
+import io.swagger.v3.oas.models.responses.{ApiResponse, ApiResponses}
 
 import scala.jdk.CollectionConverters._
 import scala.reflect.runtime.universe._
@@ -20,7 +20,7 @@ class FinatraOperation(operation: Operation) {
       .name(name)
       .description(description)
       .required(required)
-      .schema(finatraSwagger.registerModel[T].schema)
+      .schema(finatraSwagger.registerModel[T])
 
     operation.addParametersItem(param)
   }
@@ -37,7 +37,7 @@ class FinatraOperation(operation: Operation) {
       .name(name)
       .description(description)
       .required(required)
-      .schema(finatraSwagger.registerModel[T].schema)
+      .schema(finatraSwagger.registerModel[T])
 
     operation.addParametersItem(param)
   }
@@ -48,7 +48,7 @@ class FinatraOperation(operation: Operation) {
       .name(name)
       .description(description)
       .required(required)
-      .schema(finatraSwagger.registerModel[T].schema)
+      .schema(finatraSwagger.registerModel[T])
 
     operation.addParametersItem(param)
   }
@@ -59,7 +59,7 @@ class FinatraOperation(operation: Operation) {
       .name(name)
       .description(description)
       .required(required)
-      .schema(finatraSwagger.registerModel[T].schema)
+      .schema(finatraSwagger.registerModel[T])
 
     operation.addParametersItem(param)
     operation
@@ -67,7 +67,7 @@ class FinatraOperation(operation: Operation) {
 
   def bodyParam[T: TypeTag](description: String = "", example: Option[T] = None)
                            (implicit finatraSwagger: FinatraSwagger): Operation = {
-    val model = finatraSwagger.registerModel[T].schema
+    val model = finatraSwagger.registerModel[T]
 
     val content = new Content
     val mediaType = new MediaType()
@@ -77,7 +77,6 @@ class FinatraOperation(operation: Operation) {
     val reqBody = new RequestBody()
       .content(content)
       .description(description)
-      .$ref(model.get$ref())
     operation.requestBody(reqBody)
 
     operation
@@ -88,7 +87,7 @@ class FinatraOperation(operation: Operation) {
                                contentType: String = "",
                                example: Option[T] = None)
                               (implicit finatraSwagger: FinatraSwagger): Operation = {
-    val ref = finatraSwagger.registerModel[T].schema
+    val ref = finatraSwagger.registerModel[T]
 
 //    //todo not working, sample is not in the generated api, waiting for swagger fix
 //    example.foreach { e =>
@@ -107,9 +106,12 @@ class FinatraOperation(operation: Operation) {
       .description(description)
       .content(content)
 
-    operation.getResponses.addApiResponse(status.toString, apiResponse)
-
-    operation
+    if (operation.getResponses == null) {
+      operation.responses(new ApiResponses().addApiResponse(status.toString, apiResponse))
+    } else {
+      operation.getResponses.addApiResponse(status.toString, apiResponse)
+      operation
+    }
   }
 
   def tags(tags: List[String]): Operation = {
