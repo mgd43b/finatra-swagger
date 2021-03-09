@@ -15,59 +15,59 @@ object FinatraOperation {
 class FinatraOperation(operation: Operation) {
 
   def pathParam[T: TypeTag](name: String, description: String = "", required: Boolean = true)
-                           (implicit swagger: FinatraSwagger): Operation = {
+                           (implicit finatraSwagger: FinatraSwagger): Operation = {
     val param = new PathParameter()
       .name(name)
       .description(description)
       .required(required)
-      .schema(swagger.registerModel[T].schema)
+      .schema(finatraSwagger.registerModel[T].schema)
 
     operation.addParametersItem(param)
   }
 
-  def request[T <: Product : TypeTag](implicit swagger: FinatraSwagger): Operation = {
-    operation.setParameters(swagger.register[T].asJava)
+  def request[T <: Product : TypeTag](implicit finatraSwagger: FinatraSwagger): Operation = {
+    operation.setParameters(finatraSwagger.register[T].asJava)
 
     operation
   }
 
   def queryParam[T: TypeTag](name: String, description: String = "", required: Boolean = true)
-                            (implicit swagger: FinatraSwagger): Operation = {
+                            (implicit finatraSwagger: FinatraSwagger): Operation = {
     val param = new QueryParameter()
       .name(name)
       .description(description)
       .required(required)
-      .schema(swagger.registerModel[T].schema)
+      .schema(finatraSwagger.registerModel[T].schema)
 
     operation.addParametersItem(param)
   }
 
   def headerParam[T: TypeTag](name: String, description: String = "", required: Boolean = true)
-                             (implicit swagger: FinatraSwagger): Operation = {
+                             (implicit finatraSwagger: FinatraSwagger): Operation = {
     val param = new HeaderParameter()
       .name(name)
       .description(description)
       .required(required)
-      .schema(swagger.registerModel[T].schema)
+      .schema(finatraSwagger.registerModel[T].schema)
 
     operation.addParametersItem(param)
   }
 
   def cookieParam[T: TypeTag](name: String, description: String = "", required: Boolean = true)
-                             (implicit swagger: FinatraSwagger): Operation = {
+                             (implicit finatraSwagger: FinatraSwagger): Operation = {
     val param = new CookieParameter()
       .name(name)
       .description(description)
       .required(required)
-      .schema(swagger.registerModel[T].schema)
+      .schema(finatraSwagger.registerModel[T].schema)
 
     operation.addParametersItem(param)
     operation
   }
 
   def bodyParam[T: TypeTag](description: String = "", example: Option[T] = None)
-                           (implicit swagger: FinatraSwagger): Operation = {
-    val model = swagger.registerModel[T].schema
+                           (implicit finatraSwagger: FinatraSwagger): Operation = {
+    val model = finatraSwagger.registerModel[T].schema
 
     val content = new Content
     val mediaType = new MediaType()

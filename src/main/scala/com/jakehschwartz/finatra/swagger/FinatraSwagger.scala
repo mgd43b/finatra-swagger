@@ -92,7 +92,7 @@ object Resolvers {
   }
 }
 
-class FinatraSwagger(implicit val swagger: OpenAPI) {
+class FinatraSwagger(implicit val openAPI: OpenAPI) {
 
   /**
    * Register a request object that contains body information/route information/etc
@@ -252,7 +252,7 @@ class FinatraSwagger(implicit val swagger: OpenAPI) {
     val modelConverters = ModelConverters.getInstance()
     val models = modelConverters.readAll(typeClass)
     for (entry <- models.entrySet().asScala) {
-      swagger.addExtension(entry.getKey, entry.getValue)
+      openAPI.addExtension(entry.getKey, entry.getValue)
     }
     val schema = modelConverters.readAllAsResolvedSchema(typeClass)
 
@@ -266,11 +266,11 @@ class FinatraSwagger(implicit val swagger: OpenAPI) {
   def registerOperation(path: String, method: HttpMethod, operation: Operation): OpenAPI = {
     val swaggerPath = convertPath(path)
 
-    var spath = swagger.getPaths.get(swaggerPath)
+    var spath = openAPI.getPaths.get(swaggerPath)
     if (spath == null) {
       spath = new PathItem()
     }
     spath.operation(method, operation)
-    swagger.path(swaggerPath, spath)
+    openAPI.path(swaggerPath, spath)
   }
 }

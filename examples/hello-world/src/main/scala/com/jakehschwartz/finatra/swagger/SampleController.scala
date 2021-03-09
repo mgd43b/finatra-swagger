@@ -14,7 +14,7 @@ class SampleFilter extends SimpleFilter[Request, Response] {
   }
 }
 
-class SampleController @Inject()(implicit val swagger: FinatraSwagger) extends SwaggerController {
+class SampleController @Inject()(implicit val finatraSwagger: FinatraSwagger) extends SwaggerController {
 
   case class HelloResponse(text: String, time: Date)
 

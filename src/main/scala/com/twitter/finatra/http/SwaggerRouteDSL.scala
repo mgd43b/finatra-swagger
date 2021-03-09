@@ -13,7 +13,7 @@ object SwaggerRouteDSL {
 }
 
 trait SwaggerRouteDSL extends RouteDSL {
-  implicit protected val swagger: FinatraSwagger
+  implicit protected val finatraSwagger: FinatraSwagger
 
   val noopCallback: Request => Response = _ => response.SimpleResponse(Status.Ok, "")
 
@@ -112,7 +112,7 @@ trait SwaggerRouteDSL extends RouteDSL {
   }
 
   private def registerOperation(path: String, method: HttpMethod)(doc: Operation => Operation): Unit = {
-    swagger.registerOperation(prefixRoute(path), method, doc(new Operation))
+    finatraSwagger.registerOperation(prefixRoute(path), method, doc(new Operation))
   }
 
 
@@ -128,7 +128,7 @@ trait SwaggerRouteDSL extends RouteDSL {
   }
 }
 
-private class SwaggerRouteDSLWrapper(protected val dsl: RouteDSL)(implicit protected val swagger: FinatraSwagger) extends SwaggerRouteDSL {
+private class SwaggerRouteDSLWrapper(protected val dsl: RouteDSL)(implicit protected val finatraSwagger: FinatraSwagger) extends SwaggerRouteDSL {
   override private[http] val routeBuilders                 = dsl.routeBuilders
   override private[http] val annotations                   = dsl.annotations
   override private[http] lazy val contextVar               = dsl.contextVar

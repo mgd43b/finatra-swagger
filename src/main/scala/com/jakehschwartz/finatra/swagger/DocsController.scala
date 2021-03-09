@@ -15,13 +15,13 @@ import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
 import scala.util.{Failure, Success, Try}
 
 @Singleton
-class DocsController @Inject()(swagger: OpenAPI,
+class DocsController @Inject()(openAPI: OpenAPI,
                                @Flag("swagger.docs.endpoint") endpoint: String)
     extends Controller {
 
   get("/swagger.json") { _: Request =>
     response
-      .ok(SwaggerObjectMapperFactory.jsonFactory.writeValueAsString(swagger))
+      .ok(SwaggerObjectMapperFactory.jsonFactory.writeValueAsString(openAPI))
       .contentTypeJson
   }
 

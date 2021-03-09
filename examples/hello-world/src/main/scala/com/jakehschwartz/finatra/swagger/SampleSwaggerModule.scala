@@ -11,8 +11,8 @@ object SampleSwaggerModule extends SwaggerModule {
 
   @Singleton
   @Provides
-  def swagger: FinatraSwagger = {
-    val swagger = new OpenAPI()
+  def finatraSwagger: FinatraSwagger = {
+    val openAPI = new OpenAPI()
 
     val info = new Info()
       .description(
@@ -20,10 +20,10 @@ object SampleSwaggerModule extends SwaggerModule {
       .version("1.0.1")
       .title("Student / Course Management API")
 
-    swagger
+    openAPI
       .info(info)
       .addSecurityItem(new SecurityRequirement().addList("sampleBasic", "basic"))
 
-    new FinatraSwagger()(swagger)
+    new FinatraSwagger()(openAPI)
   }
 }
