@@ -4,6 +4,7 @@ import io.swagger.v3.oas.models._
 import io.swagger.v3.oas.models.media.{Content, MediaType}
 import io.swagger.v3.oas.models.parameters._
 import io.swagger.v3.oas.models.responses.{ApiResponse, ApiResponses}
+import io.swagger.v3.oas.models.security.SecurityRequirement
 
 import scala.jdk.CollectionConverters._
 import scala.reflect.runtime.universe._
@@ -113,6 +114,10 @@ class FinatraOperation(operation: Operation) {
       operation.getResponses.addApiResponse(status.toString, apiResponse)
       operation
     }
+  }
+
+  def addSecurity(name: String, scopes: List[String]): Operation = {
+    operation.addSecurityItem(new SecurityRequirement().addList(name, scopes.asJava))
   }
 
   def tags(tags: List[String]): Operation = {

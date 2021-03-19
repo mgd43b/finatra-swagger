@@ -50,7 +50,7 @@ object FinatraSwagger {
       classOf[constraints.UUID]
     )
 
-  implicit def convert(openAPI: OpenAPI): FinatraSwagger = new FinatraSwagger()(openAPI)
+  implicit def convert(openAPI: OpenAPI): FinatraSwagger = new FinatraSwagger(openAPI)
 }
 
 sealed trait ModelParam {
@@ -67,34 +67,7 @@ case class HeaderRequestParam(name: String, required: Boolean = true, descriptio
 case class BodyRequestParam(description: String = "", name: String, typ: Class[_], innerOptionType: Option[java.lang.reflect.Type] = None) extends FinatraRequestParam
 case class RequestInjectRequestParam(name: String) extends FinatraRequestParam
 
-object Resolvers {
-  class ScalaOptionResolver(objectMapper: ObjectMapper) extends ModelResolver(objectMapper) {
-    override def resolve(
-                          annotatedType: AnnotatedType,
-                          context: ModelConverterContext,
-                          next: util.Iterator[ModelConverter]): Schema[_]= {
-      if (annotatedType.getType == classOf[Option[_]]) {
-        try {
-          val at = new AnnotatedType()
-            .`type`(annotatedType.getType.asInstanceOf[JavaType].containedType(0))
-            .ctxAnnotations(annotatedType.getCtxAnnotations)
-          super.resolve(at, context, next)
-        } catch {
-          case _: Exception =>
-            super.resolve(annotatedType, context, next)
-        }
-      } else {
-        super.resolve(annotatedType, context, next)
-      }
-    }
-  }
-
-  def register(objectMapper: ObjectMapper = Json.mapper): Unit = {
-    ModelConverters.getInstance().addConverter(new ScalaOptionResolver(objectMapper))
-  }
-}
-
-class FinatraSwagger(implicit val openAPI: OpenAPI) {
+class FinatraSwagger(val openAPI: OpenAPI) {
 
   /**
    * Register a request object that contains body information/route information/etc

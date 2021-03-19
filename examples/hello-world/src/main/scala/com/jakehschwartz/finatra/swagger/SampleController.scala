@@ -6,7 +6,6 @@ import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.Future
 import io.swagger.v3.oas.models.OpenAPI
-import io.swagger.v3.oas.models.security.SecurityRequirement
 import org.joda.time.{DateTime, LocalDate}
 
 class SampleFilter extends SimpleFilter[Request, Response] {
@@ -103,7 +102,7 @@ class SampleController @Inject()(implicit val openAPI: OpenAPI) extends SwaggerC
     o.summary("Get a list of students")
       .addTagsItem("Student")
       .respondsWith[Array[String]](200, "the student ids")
-      .addSecurityItem(new SecurityRequirement().addList("sampleBasic"))
+      .addSecurity("sampleBasic", List())
   } { request: Request =>
     response.ok.json(Array("student1", "student2")).toFuture
   }
