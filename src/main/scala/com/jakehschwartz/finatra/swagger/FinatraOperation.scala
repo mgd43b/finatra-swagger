@@ -92,13 +92,13 @@ class FinatraOperation(operation: Operation) {
     val ref = openAPI.registerModel[T]
 
 //    //todo not working, sample is not in the generated api, waiting for swagger fix
-//    example.foreach { e =>
-//      if(ref != null) {
-//        ref.setExample(e)
+    example.foreach { e =>
+      if (ref != null) {
+        ref.setExample(e)
 //        //val model = api.swagger.getDefinitions.get(ref.asInstanceOf[RefProperty].getSimpleRef)
 //        //model.setExample(example)
-//      }
-//    }
+      }
+    }
 
     val content = new Content
     val mediaType = new MediaType().schema(ref)
