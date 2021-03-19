@@ -5,7 +5,7 @@ import com.google.inject.{Inject => GInject}
 import com.twitter.finagle.http.Request
 import com.twitter.finatra.http.annotations.{QueryParam, RouteParam, Header => HeaderParam}
 import com.twitter.finatra.validation.constraints
-import io.swagger.v3.core.converter.{AnnotatedType, ModelConverter, ModelConverterContext, ModelConverters, ResolvedSchema}
+import io.swagger.v3.core.converter.{AnnotatedType, ModelConverter, ModelConverterContext, ModelConverters}
 import io.swagger.v3.core.jackson.ModelResolver
 import io.swagger.v3.core.util.Json
 import io.swagger.v3.oas.models.PathItem.HttpMethod
@@ -49,6 +49,8 @@ object FinatraSwagger {
       classOf[constraints.TimeGranularity],
       classOf[constraints.UUID]
     )
+
+  implicit def convert(openAPI: OpenAPI): FinatraSwagger = new FinatraSwagger()(openAPI)
 }
 
 sealed trait ModelParam {

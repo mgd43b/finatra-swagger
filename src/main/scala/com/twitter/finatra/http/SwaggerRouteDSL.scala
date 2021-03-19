@@ -9,11 +9,11 @@ import io.swagger.v3.oas.models.{OpenAPI, Operation}
   * To work around the accessibility of RouteDSL, this class is in "com.twitter.finatra.http" package
   */
 object SwaggerRouteDSL {
-  implicit def convert(dsl: RouteDSL)(implicit swagger: FinatraSwagger): SwaggerRouteDSL = new SwaggerRouteDSLWrapper(dsl)(swagger)
+  implicit def convert(dsl: RouteDSL)(implicit openAPI: OpenAPI): SwaggerRouteDSL = new SwaggerRouteDSLWrapper(dsl)(openAPI)
 }
 
 trait SwaggerRouteDSL extends RouteDSL {
-  implicit protected val finatraSwagger: FinatraSwagger
+  implicit protected val openAPI: OpenAPI
 
   val noopCallback: Request => Response = _ => response.SimpleResponse(Status.Ok, "")
 
@@ -112,7 +112,9 @@ trait SwaggerRouteDSL extends RouteDSL {
   }
 
   private def registerOperation(path: String, method: HttpMethod)(doc: Operation => Operation): Unit = {
-    finatraSwagger.registerOperation(prefixRoute(path), method, doc(new Operation))
+    FinatraSwagger
+      .convert(openAPI)
+      .registerOperation(prefixRoute(path), method, doc(new Operation))
   }
 
 
@@ -128,7 +130,7 @@ trait SwaggerRouteDSL extends RouteDSL {
   }
 }
 
-private class SwaggerRouteDSLWrapper(protected val dsl: RouteDSL)(implicit protected val finatraSwagger: FinatraSwagger) extends SwaggerRouteDSL {
+private class SwaggerRouteDSLWrapper(protected val dsl: RouteDSL)(implicit protected val openAPI: OpenAPI) extends SwaggerRouteDSL {
   override private[http] val routeBuilders                 = dsl.routeBuilders
   override private[http] val annotations                   = dsl.annotations
   override private[http] lazy val contextVar               = dsl.contextVar

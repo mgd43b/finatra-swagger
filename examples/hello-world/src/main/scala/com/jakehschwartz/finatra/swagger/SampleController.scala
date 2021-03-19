@@ -5,6 +5,7 @@ import javax.inject.Inject
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.Future
+import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.security.SecurityRequirement
 import org.joda.time.{DateTime, LocalDate}
 
@@ -14,7 +15,7 @@ class SampleFilter extends SimpleFilter[Request, Response] {
   }
 }
 
-class SampleController @Inject()(implicit val finatraSwagger: FinatraSwagger) extends SwaggerController {
+class SampleController @Inject()(implicit val openAPI: OpenAPI) extends SwaggerController {
 
   case class HelloResponse(text: String, time: Date)
 

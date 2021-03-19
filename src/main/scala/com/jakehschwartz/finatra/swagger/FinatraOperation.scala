@@ -13,61 +13,62 @@ object FinatraOperation {
 }
 
 class FinatraOperation(operation: Operation) {
+  import FinatraSwagger._
 
   def pathParam[T: TypeTag](name: String, description: String = "", required: Boolean = true)
-                           (implicit finatraSwagger: FinatraSwagger): Operation = {
+                           (implicit openAPI: OpenAPI): Operation = {
     val param = new PathParameter()
       .name(name)
       .description(description)
       .required(required)
-      .schema(finatraSwagger.registerModel[T])
+      .schema(openAPI.registerModel[T])
 
     operation.addParametersItem(param)
   }
 
-  def request[T <: Product : TypeTag](implicit finatraSwagger: FinatraSwagger): Operation = {
-    operation.setParameters(finatraSwagger.register[T].asJava)
+  def request[T <: Product : TypeTag](implicit openAPI: OpenAPI): Operation = {
+    operation.setParameters(openAPI.register[T].asJava)
 
     operation
   }
 
   def queryParam[T: TypeTag](name: String, description: String = "", required: Boolean = true)
-                            (implicit finatraSwagger: FinatraSwagger): Operation = {
+                            (implicit openAPI: OpenAPI): Operation = {
     val param = new QueryParameter()
       .name(name)
       .description(description)
       .required(required)
-      .schema(finatraSwagger.registerModel[T])
+      .schema(openAPI.registerModel[T])
 
     operation.addParametersItem(param)
   }
 
   def headerParam[T: TypeTag](name: String, description: String = "", required: Boolean = true)
-                             (implicit finatraSwagger: FinatraSwagger): Operation = {
+                             (implicit openAPI: OpenAPI): Operation = {
     val param = new HeaderParameter()
       .name(name)
       .description(description)
       .required(required)
-      .schema(finatraSwagger.registerModel[T])
+      .schema(openAPI.registerModel[T])
 
     operation.addParametersItem(param)
   }
 
   def cookieParam[T: TypeTag](name: String, description: String = "", required: Boolean = true)
-                             (implicit finatraSwagger: FinatraSwagger): Operation = {
+                             (implicit openAPI: OpenAPI): Operation = {
     val param = new CookieParameter()
       .name(name)
       .description(description)
       .required(required)
-      .schema(finatraSwagger.registerModel[T])
+      .schema(openAPI.registerModel[T])
 
     operation.addParametersItem(param)
     operation
   }
 
   def bodyParam[T: TypeTag](description: String = "", example: Option[T] = None)
-                           (implicit finatraSwagger: FinatraSwagger): Operation = {
-    val model = finatraSwagger.registerModel[T]
+                           (implicit openAPI: OpenAPI): Operation = {
+    val model = openAPI.registerModel[T]
 
     val content = new Content
     val mediaType = new MediaType()
@@ -86,8 +87,8 @@ class FinatraOperation(operation: Operation) {
                                description: String = "",
                                contentType: String = "",
                                example: Option[T] = None)
-                              (implicit finatraSwagger: FinatraSwagger): Operation = {
-    val ref = finatraSwagger.registerModel[T]
+                              (implicit openAPI: OpenAPI): Operation = {
+    val ref = openAPI.registerModel[T]
 
 //    //todo not working, sample is not in the generated api, waiting for swagger fix
 //    example.foreach { e =>
