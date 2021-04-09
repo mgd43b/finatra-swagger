@@ -12,11 +12,11 @@ name := "finatra-swagger"
 
 scalaVersion := "2.13.1"
 
-crossScalaVersions := Seq("2.11.12", "2.12.12", "2.13.1")
+crossScalaVersions := Seq("2.12.12", "2.13.1")
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
-lazy val twitterReleaseVersion = "21.2.0"
+lazy val twitterReleaseVersion = "21.3.0"
 lazy val jacksonVersion = "2.11.2"
 
 lazy val swaggerUIVersion = SettingKey[String]("swaggerUIVersion")
@@ -30,7 +30,7 @@ buildInfoKeys := Seq[BuildInfoKey](name, version, swaggerUIVersion)
 libraryDependencies ++= Seq(
   "com.fasterxml.jackson.datatype" % "jackson-datatype-joda" % jacksonVersion,
   "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
-  "com.twitter" %% "finatra-http" % twitterReleaseVersion,
+  "com.twitter" %% "finatra-http-server" % twitterReleaseVersion,
   "io.swagger" % "swagger-core" % "1.6.2",
   "io.swagger" %% "swagger-scala-module" % "1.0.6",
   "net.bytebuddy" % "byte-buddy" % "1.10.19",
@@ -41,7 +41,7 @@ libraryDependencies ++= Seq(
 
 val testLibs = Seq(
   "ch.qos.logback" % "logback-classic" % "1.2.3",
-  "com.twitter" %% "finatra-http" % twitterReleaseVersion % "test" classifier "tests",
+  "com.twitter" %% "finatra-http-server" % twitterReleaseVersion % "test" classifier "tests",
   "com.twitter" %% "inject-app" % twitterReleaseVersion % "test" classifier "tests",
   "com.twitter" %% "inject-core" % twitterReleaseVersion % "test" classifier "tests",
   "com.twitter" %% "inject-modules" % twitterReleaseVersion % "test" classifier "tests",
