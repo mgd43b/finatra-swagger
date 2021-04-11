@@ -65,6 +65,7 @@ scalacOptions ++= Seq(
 )
 
 val sharedSettings =   Seq(
+  resolvers += Resolver.sonatypeRepo("public"),
   parallelExecution in Test := true,
   testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oDF"),
   javaOptions ++= Seq(
