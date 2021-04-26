@@ -74,7 +74,8 @@ class FinatraOperation(operation: Operation) {
     val content = new Content
     val mediaType = new MediaType()
       .schema(model)
-    content.addMediaType("application/json", example.fold(mediaType)(mediaType.example))
+    val mt = example.fold(mediaType)(mediaType.example)
+    content.addMediaType("application/json", mt)
 
     val reqBody = new RequestBody()
       .content(content)
@@ -84,7 +85,7 @@ class FinatraOperation(operation: Operation) {
     operation
   }
 
-  def respondsWith[T: TypeTag](status: Int,
+  def responseWith[T: TypeTag](status: Int,
                                description: String = "",
                                contentType: String = "",
                                example: Option[T] = None)
@@ -118,6 +119,10 @@ class FinatraOperation(operation: Operation) {
 
   def addSecurity(name: String, scopes: List[String]): Operation = {
     operation.addSecurityItem(new SecurityRequirement().addList(name, scopes.asJava))
+  }
+
+  def tag(tag: String): Operation = {
+    tags(List(tag))
   }
 
   def tags(tags: List[String]): Operation = {

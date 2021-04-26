@@ -1,6 +1,5 @@
 # finatra-swagger
 
-[![CircleCI](https://circleci.com/gh/jakehschwartz/finatra-swagger/tree/master.svg?style=svg)](https://circleci.com/gh/jakehschwartz/finatra-swagger/tree/master)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/02f5a150c842471cb8415b6510ed0ab6)](https://www.codacy.com/app/jakehschwartz54/finatra-swagger?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=jakehschwartz/finatra-swagger&amp;utm_campaign=Badge_Grade)
 
 Add [Swagger UI](http://swagger.io/swagger-ui/) support to [Finatra](https://github.com/twitter/finatra) web framework.
@@ -13,7 +12,7 @@ For older versions, see the original repository by [xiaodongw](https://github.co
 
 The major and minor version of the library matches the Finatra major and minor version:
 ````sbt
-libraryDependencies += "com.jakehschwartz" %% "finatra-swagger" % "21.1.0"
+libraryDependencies += "com.jakehschwartz" %% "finatra-swagger" % "21.3.0"
 ````
 
 First, create a subclass of a SwaggerModule

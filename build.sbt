@@ -1,7 +1,7 @@
 
 inThisBuild(List(
   scalaVersion := "2.13.1",
-  crossScalaVersions := Seq("2.11.12", "2.12.12", "2.13.1"),
+  crossScalaVersions := Seq("2.12.12", "2.13.1"),
   organization := "com.jakehschwartz",
   homepage := Some(url("https://github.com/jakehschwartz/finatra-swagger")),
   licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
@@ -21,7 +21,7 @@ lazy val finatraSwagger = project
     buildInfoPackage := "com.jakehschwartz.finatra.swagger",
     buildInfoKeys := Seq[BuildInfoKey](name, version, swaggerUIVersion),
     libraryDependencies ++= Seq(
-      "com.twitter" %% "finatra-http" % twitterReleaseVersion,
+      "com.twitter" %% "finatra-http-server" % twitterReleaseVersion,
       "io.swagger.core.v3" % "swagger-project" % "2.1.7",
       "com.github.swagger-akka-http" %% "swagger-scala-module" % "2.3.0",
       "com.fasterxml.jackson.datatype" % "jackson-datatype-joda" % jacksonVersion,
@@ -69,10 +69,10 @@ lazy val settings: Seq[sbt.Def.SettingsDefinition] = Seq(
 )
 
 
-lazy val twitterReleaseVersion = "21.2.0"
+lazy val twitterReleaseVersion = "21.3.0"
 lazy val jacksonVersion = "2.11.2"
 val testLibs = Seq(
-  "com.twitter" %% "finatra-http" % twitterReleaseVersion % "test" classifier "tests",
+  "com.twitter" %% "finatra-http-server" % twitterReleaseVersion % "test" classifier "tests",
   "com.twitter" %% "inject-app" % twitterReleaseVersion % "test" classifier "tests",
   "com.twitter" %% "inject-core" % twitterReleaseVersion % "test" classifier "tests",
   "com.twitter" %% "inject-modules" % twitterReleaseVersion % "test" classifier "tests",

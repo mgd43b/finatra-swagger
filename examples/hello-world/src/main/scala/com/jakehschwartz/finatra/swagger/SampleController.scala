@@ -23,9 +23,9 @@ class SampleController @Inject()(implicit val openAPI: OpenAPI) extends SwaggerC
       .description("Read the detail information about the student.")
       .addTagsItem("Student")
       .pathParam[String]("id", "the student id")
-      .respondsWith[Student](200, "the student object", "application/json",
+      .responseWith[Student](200, "the student object", "application/json",
       example = Some(Student("Tom", "Wang", Gender.Male, new LocalDate(), 4, Some(Address("California Street", "94111")))))
-      .respondsWith(404, "the student is not found")
+      .responseWith(404, "the student is not found")
   } { request: Request =>
     val id = request.getParam("id")
 
@@ -65,8 +65,8 @@ class SampleController @Inject()(implicit val openAPI: OpenAPI) extends SwaggerC
     o.summary("Create a new student")
       .addTagsItem("Student")
       .bodyParam[Student]("the student details")
-      .respondsWith[Student](200, "the student is created")
-      .respondsWith(500, "internal error")
+      .responseWith[Student](200, "the student is created")
+      .responseWith(500, "internal error")
   } { student: Student =>
     //val student = request.contentString
     response.ok.json(student).toFuture
@@ -76,8 +76,8 @@ class SampleController @Inject()(implicit val openAPI: OpenAPI) extends SwaggerC
     o.summary("Create a list of students")
       .addTagsItem("Student")
       .bodyParam[Array[Student]]("the list of students")
-      .respondsWith[List[Student]](200, "the students are created")
-      .respondsWith(500, "internal error")
+      .responseWith[List[Student]](200, "the students are created")
+      .responseWith(500, "internal error")
   } { students: List[Student] =>
     response.ok.json(students).toFuture
   }
@@ -88,8 +88,8 @@ class SampleController @Inject()(implicit val openAPI: OpenAPI) extends SwaggerC
       .pathParam[String]("id", "student ID")
       .cookieParam[String]("who", "who make the update")
       .headerParam[String]("token", "the token")
-      .respondsWith(200, "the student is updated")
-      .respondsWith(404, "the student is not found")
+      .responseWith(200, "the student is updated")
+      .responseWith(404, "the student is not found")
   } { request: Request =>
     val grade = request.getIntParam("grade")
     val who = request.cookies.getOrElse("who", "Sam") //todo swagger-ui not set the cookie?
@@ -101,7 +101,7 @@ class SampleController @Inject()(implicit val openAPI: OpenAPI) extends SwaggerC
   getWithDoc("/students", registerOptionsRequest = true) { o =>
     o.summary("Get a list of students")
       .addTagsItem("Student")
-      .respondsWith[Array[String]](200, "the student ids")
+      .responseWith[Array[String]](200, "the student ids")
       .addSecurity("sampleBasic", List())
   } { request: Request =>
     response.ok.json(Array("student1", "student2")).toFuture
@@ -110,8 +110,8 @@ class SampleController @Inject()(implicit val openAPI: OpenAPI) extends SwaggerC
   getWithDoc("/courses", registerOptionsRequest = true) { o =>
     o.summary("Get a list of courses")
       .addTagsItem("Course")
-      .respondsWith[Array[String]](200, "the courses ids")
-      .respondsWith(500, "internal error")
+      .responseWith[Array[String]](200, "the courses ids")
+      .responseWith(500, "internal error")
   } { request: Request =>
     response.ok.json(Array("course1", "course2")).toFuture
   }
@@ -120,8 +120,8 @@ class SampleController @Inject()(implicit val openAPI: OpenAPI) extends SwaggerC
     o.summary("Get the detail of a course")
       .addTagsItem("Course")
       .pathParam[String]("id", "the course id")
-      .respondsWith[Course](200, "the courses detail")
-      .respondsWith(500, "internal error")
+      .responseWith[Course](200, "the courses detail")
+      .responseWith(500, "internal error")
   } { request: Request =>
     response.ok.json(Course(new DateTime(), "calculation", Seq("math"), CourseType.LAB, 20, BigDecimal(300.54))).toFuture
   }
@@ -131,8 +131,8 @@ class SampleController @Inject()(implicit val openAPI: OpenAPI) extends SwaggerC
       .tags(List("Course", "Student"))
       .pathParam[String]("courseId", "the course id")
       .pathParam[String]("studentId", "the student id")
-      .respondsWith[Boolean](200, "true / false")
-      .respondsWith(500, "internal error")
+      .responseWith[Boolean](200, "true / false")
+      .responseWith(500, "internal error")
       .deprecated(true)
   } { request: Request =>
     response.ok.json(true).toFuture

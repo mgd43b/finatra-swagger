@@ -2,11 +2,12 @@ package com.jakehschwartz.finatra.swagger
 
 import java.io.BufferedInputStream
 import java.util.Date
-
 import com.twitter.finagle.http.{Message, Request}
 import com.twitter.finatra.http.Controller
+import com.twitter.finatra.jackson.ScalaObjectMapper
 import com.twitter.inject.annotations.Flag
 import io.swagger.v3.oas.models.OpenAPI
+
 import javax.activation.MimetypesFileTypeMap
 import javax.inject.{Inject, Singleton}
 import org.apache.commons.io.FilenameUtils
@@ -16,19 +17,19 @@ import scala.util.{Failure, Success, Try}
 
 @Singleton
 class DocsController @Inject()(openAPI: OpenAPI,
+                               objectMapper: ScalaObjectMapper,
                                @Flag("swagger.docs.endpoint") endpoint: String)
     extends Controller {
 
   get("/swagger.json") { _: Request =>
     response
-      .ok(SwaggerObjectMapperFactory.jsonFactory.writeValueAsString(openAPI))
+      .ok(objectMapper.writeValueAsString(openAPI))
       .contentTypeJson
   }
 
   get(s"$endpoint") { _: Request =>
     response.temporaryRedirect
-      .location(
-        s"$endpoint/swagger-ui/${BuildInfo.swaggerUIVersion}/index.html?url=/swagger.json")
+      .location(s"$endpoint/swagger-ui/${BuildInfo.swaggerUIVersion}/index.html?url=/swagger.json")
   }
 
   private val defaultExpireTimeMillis: Long = 86400000L // 1 day
@@ -37,8 +38,7 @@ class DocsController @Inject()(openAPI: OpenAPI,
   get(s"$endpoint/:*") { request: Request =>
     val resourcePath = request.getParam("*")
 
-    val webjarsResourceURI: String =
-      s"/META-INF/resources/webjars/$resourcePath"
+    val webjarsResourceURI: String = s"/META-INF/resources/webjars/$resourcePath"
     if (isDirectoryRequest(webjarsResourceURI)) {
       response.forbidden
     } else {

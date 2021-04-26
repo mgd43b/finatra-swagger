@@ -1,13 +1,10 @@
 package com.jakehschwartz.finatra.swagger
 
-import com.fasterxml.jackson.databind.{JavaType, ObjectMapper}
 import com.google.inject.{Inject => GInject}
 import com.twitter.finagle.http.Request
 import com.twitter.finatra.http.annotations.{QueryParam, RouteParam, Header => HeaderParam}
 import com.twitter.finatra.validation.constraints
-import io.swagger.v3.core.converter.{AnnotatedType, ModelConverter, ModelConverterContext, ModelConverters}
-import io.swagger.v3.core.jackson.ModelResolver
-import io.swagger.v3.core.util.Json
+import io.swagger.v3.core.converter.ModelConverters
 import io.swagger.v3.oas.models.PathItem.HttpMethod
 import io.swagger.v3.oas.models._
 import io.swagger.v3.oas.models.media.Schema
@@ -18,7 +15,6 @@ import net.bytebuddy.description.modifier.Visibility
 
 import java.lang.annotation.Annotation
 import java.lang.reflect.ParameterizedType
-import java.util
 import javax.inject.{Inject => JInject}
 import scala.jdk.CollectionConverters._
 import scala.reflect.runtime._
@@ -227,7 +223,7 @@ class FinatraSwagger(val openAPI: OpenAPI) {
     val modelConverters = ModelConverters.getInstance()
     val models = modelConverters.readAll(typeClass)
     for (entry <- models.entrySet().asScala) {
-      openAPI.addExtension(entry.getKey, entry.getValue)
+      openAPI.schema(entry.getKey, entry.getValue)
     }
     val schema = modelConverters.readAll(typeClass)
 
@@ -241,17 +237,12 @@ class FinatraSwagger(val openAPI: OpenAPI) {
   def registerOperation(path: String, method: HttpMethod, operation: Operation): OpenAPI = {
     val swaggerPath = convertPath(path)
 
-    if (openAPI.getPaths == null) {
-      val spath = new PathItem()
-      spath.operation(method, operation)
-      openAPI.path(swaggerPath, spath)
+    val spath = if (openAPI.getPaths == null || openAPI.getPaths.get(swaggerPath) == null) {
+      new PathItem()
     } else {
-      var spath = openAPI.getPaths.get(swaggerPath)
-      if (spath == null) {
-        spath = new PathItem()
-      }
-      spath.operation(method, operation)
-      openAPI.path(swaggerPath, spath)
+      openAPI.getPaths.get(swaggerPath)
     }
+    spath.operation(method, operation)
+    openAPI.path(swaggerPath, spath)
   }
 }
