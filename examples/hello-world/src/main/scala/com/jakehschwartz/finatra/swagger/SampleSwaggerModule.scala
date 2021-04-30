@@ -1,16 +1,18 @@
 package com.jakehschwartz.finatra.swagger
 
 import com.google.inject.Provides
-import io.swagger.models.auth.BasicAuthDefinition
-import io.swagger.models.{Info, Swagger}
+import io.swagger.v3.oas.models.OpenAPI
+import io.swagger.v3.oas.models.info.Info
+import io.swagger.v3.oas.models.security.SecurityRequirement
+
 import javax.inject.Singleton
 
 object SampleSwaggerModule extends SwaggerModule {
 
   @Singleton
   @Provides
-  def swagger: Swagger = {
-    val swagger = new Swagger()
+  def openAPI: OpenAPI = {
+    val openAPI = new OpenAPI()
 
     val info = new Info()
       .description(
@@ -18,14 +20,10 @@ object SampleSwaggerModule extends SwaggerModule {
       .version("1.0.1")
       .title("Student / Course Management API")
 
-    swagger
+    openAPI
       .info(info)
-      .addSecurityDefinition("sampleBasic", {
-        val d = new BasicAuthDefinition()
-        d.setType("basic")
-        d
-      })
+      .addSecurityItem(new SecurityRequirement().addList("sampleBasic", "basic"))
 
-    swagger
+    openAPI
   }
 }
